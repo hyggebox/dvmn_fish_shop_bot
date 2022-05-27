@@ -6,7 +6,7 @@ from time import sleep
 
 import requests
 from environs import Env
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, Bot
 from telegram.ext import (CallbackContext,
                           CallbackQueryHandler,
                           CommandHandler,
@@ -25,6 +25,18 @@ from moltin_handlers import (generate_moltin_token,
 
 
 logger = logging.getLogger('TGBotLogger')
+
+
+class TelegramLogsHandler(logging.Handler):
+
+    def __init__(self, tg_bot, chat_id):
+        super().__init__()
+        self.chat_id = chat_id
+        self.tg_bot = tg_bot
+
+    def emit(self, record):
+        log_entry = self.format(record)
+        self.tg_bot.send_message(chat_id=self.chat_id, text=log_entry)
 
 
 class State(Enum):
@@ -208,6 +220,12 @@ def main():
     tg_bot_token = env.str('TG_BOT_TOKEN')
     moltin_client_id = env.str('MOLTIN_CLIENT_ID')
     moltin_secret_key = env.str('MOLTIN_SECRET_KEY')
+    tg_admin_chat_id = env.str('TG_ADMIN_CHAT_ID')
+
+    bot = Bot(token=tg_bot_token)
+    logger.setLevel(level=logging.INFO)
+    logger.addHandler(TelegramLogsHandler(bot, tg_admin_chat_id))
+    logger.info('Бот запущен')
 
     pathlib.Path('images/').mkdir(exist_ok=True)
 

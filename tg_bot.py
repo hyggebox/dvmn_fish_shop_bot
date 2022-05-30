@@ -17,6 +17,7 @@ from telegram.ext import (CallbackContext,
 
 from helpers import download_photo
 from moltin_handlers import (generate_moltin_token,
+                             get_products_in_catalog,
                              get_product_data,
                              get_cart_items,
                              add_product_to_cart,
@@ -48,15 +49,7 @@ class State(Enum):
 
 
 def get_main_menu_markup(token):
-    headers = {
-        'Authorization': f'Bearer {token}',
-        'Content-Type': 'application/json',
-        'EP-Channel': 'web store'
-    }
-    response = requests.get('https://api.moltin.com/catalog/products/',
-                            headers=headers)
-    response.raise_for_status()
-    products_in_catalog = response.json()['data']
+    products_in_catalog = get_products_in_catalog(token)
 
     buttons = [[InlineKeyboardButton(product['attributes']['name'],
                                      callback_data=product['id'])]

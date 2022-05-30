@@ -13,6 +13,18 @@ def generate_moltin_token(client_id, secret_key):
     return response.json()['access_token']
 
 
+def get_products_in_catalog(token):
+    endpoint = 'https://api.moltin.com/catalog/products/'
+    headers = {
+        'Authorization': f'Bearer {token}',
+        'Content-Type': 'application/json',
+        'EP-Channel': 'web store'
+    }
+    response = requests.get(endpoint, headers=headers)
+    response.raise_for_status()
+    return response.json()['data']
+
+
 def get_product_data(headers, user_query):
     endpoint = 'https://api.moltin.com/catalog/products/{}'
     response = requests.get(endpoint.format(user_query.data), headers=headers)

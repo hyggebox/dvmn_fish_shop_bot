@@ -1,5 +1,4 @@
 import requests
-from environs import Env
 
 
 def generate_moltin_token(client_id, secret_key):
@@ -59,13 +58,3 @@ def create_customer(headers, customer_id, name, email):
     }
     response = requests.post(endpoint, headers=headers, json=data)
     response.raise_for_status()
-
-
-if __name__ == '__main__':
-    env = Env()
-    env.read_env()
-
-    moltin_client_id = env.str('MOLTIN_CLIENT_ID')
-    moltin_secret_key = env.str('MOLTIN_SECRET_KEY')
-
-    access_token = generate_moltin_token(moltin_client_id, moltin_secret_key)

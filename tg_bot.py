@@ -15,7 +15,7 @@ from telegram.ext import (CallbackContext,
                           MessageHandler,
                           Updater)
 
-from helpers import download_photo, get_capture_text
+from helpers import download_photo
 from moltin_handlers import (generate_moltin_token,
                              get_product_data,
                              get_cart_items,
@@ -153,9 +153,15 @@ def handle_menu(update: Update, context: CallbackContext):
                     ]
                 )
 
+                product_attrs = product_data['attributes']
+                product_price = product_data['meta']['display_price']['without_tax']['formatted']
+                caption_text = f'{product_attrs["name"]}\n\n' \
+                       f'Цена: {product_price}/кг\n\n' \
+                       f'{product_attrs["description"]}'[:1024]
+
                 context.bot.send_photo(chat_id=user_query.message.chat_id,
                                        photo=image,
-                                       caption=get_capture_text(product_data),
+                                       caption=caption_text,
                                        reply_markup=reply_markup)
                 return State.HANDLE_DESCRIPTION
 

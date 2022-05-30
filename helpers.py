@@ -25,11 +25,3 @@ def download_photo(headers, img_id):
         with open(product_img, 'wb') as file:
             file.write(img_response.content)
 
-
-def get_capture_text(product_data):
-    product_attrs = product_data['attributes']
-    product_price = product_data['meta']['display_price']['without_tax']['formatted']
-    product_description = product_attrs['description']
-
-    text = f'{product_attrs["name"]}\n\nЦена: {product_price}/кг\n\n{product_description}'
-    return text[:1024]

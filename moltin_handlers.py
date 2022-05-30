@@ -29,7 +29,11 @@ def add_product_to_cart(headers, cart_id, product_id, qty):
           'quantity': int(qty)
         }
       }
+
     response = requests.post(endpoint, headers=headers, json=data)
+    if response.status_code == 400:
+        return response.json()
+    response.raise_for_status()
     return response.json()
 
 

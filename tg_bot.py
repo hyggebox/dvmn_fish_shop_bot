@@ -139,31 +139,32 @@ def handle_menu(update: Update, context: CallbackContext):
     download_photo(moltin_headers, product_img_id)
 
     for filename in os.listdir('images'):
-        if filename.startswith(product_img_id):
-            with open(f'images/{filename}', 'rb') as image:
-                reply_markup = InlineKeyboardMarkup(
+        if not filename.startswith(product_img_id):
+            continue
+        with open(f'images/{filename}', 'rb') as image:
+            reply_markup = InlineKeyboardMarkup(
+                [
                     [
-                        [
-                            InlineKeyboardButton('➕ 1 кг', callback_data=1),
-                            InlineKeyboardButton('➕ 5 кг', callback_data=5),
-                            InlineKeyboardButton('➕ 10 кг', callback_data=10)
-                        ],
-                        [InlineKeyboardButton('🛒 КОРЗИНА', callback_data='cart')],
-                        [InlineKeyboardButton('Назад', callback_data='back')]
-                    ]
-                )
+                        InlineKeyboardButton('➕ 1 кг', callback_data=1),
+                        InlineKeyboardButton('➕ 5 кг', callback_data=5),
+                        InlineKeyboardButton('➕ 10 кг', callback_data=10)
+                    ],
+                    [InlineKeyboardButton('🛒 КОРЗИНА', callback_data='cart')],
+                    [InlineKeyboardButton('Назад', callback_data='back')]
+                ]
+            )
 
-                product_attrs = product_data['attributes']
-                product_price = product_data['meta']['display_price']['without_tax']['formatted']
-                caption_text = f'{product_attrs["name"]}\n\n' \
-                       f'Цена: {product_price}/кг\n\n' \
-                       f'{product_attrs["description"]}'[:1024]
+            product_attrs = product_data['attributes']
+            product_price = product_data['meta']['display_price']['without_tax']['formatted']
+            caption_text = f'{product_attrs["name"]}\n\n' \
+                   f'Цена: {product_price}/кг\n\n' \
+                   f'{product_attrs["description"]}'[:1024]
 
-                context.bot.send_photo(chat_id=user_query.message.chat_id,
-                                       photo=image,
-                                       caption=caption_text,
-                                       reply_markup=reply_markup)
-                return State.HANDLE_DESCRIPTION
+            context.bot.send_photo(chat_id=user_query.message.chat_id,
+                                   photo=image,
+                                   caption=caption_text,
+                                   reply_markup=reply_markup)
+            return State.HANDLE_DESCRIPTION
 
 
 def handle_description(update: Update, context: CallbackContext):

@@ -49,13 +49,8 @@ def start(update: Update, context: CallbackContext):
     moltin_token = generate_moltin_token(
         context.bot_data['moltin_client_id'],
         context.bot_data['moltin_secret_key'])
-    moltin_headers = {
-        'Authorization': f'Bearer {moltin_token}',
-        'Content-Type': 'application/json',
-    }
 
     context.user_data['moltin_token'] = moltin_token
-    context.user_data['moltin_headers'] = moltin_headers
 
     user = update.effective_user
     update.message.reply_markdown_v2(
@@ -79,19 +74,19 @@ def show_menu(update: Update, context: CallbackContext):
 
 def handle_menu(update: Update, context: CallbackContext):
     user_query = update.callback_query
-    moltin_headers = context.user_data['moltin_headers']
+    moltin_token = context.user_data['moltin_token']
 
     if user_query['data'] == 'cart':
-        show_cart(update, context, moltin_headers)
+        show_cart(update, context, moltin_token)
         return State.HANDLE_CART
 
     context.user_data['product_id'] = user_query.data
     context.bot.delete_message(chat_id=user_query.message.chat_id,
                                message_id=user_query.message.message_id)
 
-    product_data = get_product_data(moltin_headers, user_query)
+    product_data = get_product_data(moltin_token, user_query)
     product_img_id = product_data['relationships']['main_image']['data']['id']
-    download_photo(moltin_headers, product_img_id)
+    download_photo(moltin_token, product_img_id)
 
     for filename in os.listdir('images'):
         if not filename.startswith(product_img_id):
@@ -124,15 +119,15 @@ def handle_menu(update: Update, context: CallbackContext):
 
 def handle_description(update: Update, context: CallbackContext):
     user_query = update.callback_query
-    moltin_headers = context.user_data['moltin_headers']
+    moltin_token = context.user_data['moltin_token']
 
     if user_query['data'] == 'back':
         return State.SHOW_MENU
     if user_query['data'] == 'cart':
-        show_cart(update, context, moltin_headers)
+        show_cart(update, context, moltin_token)
         return State.HANDLE_CART
 
-    cart_response = add_product_to_cart(headers=moltin_headers,
+    cart_response = add_product_to_cart(token=moltin_token,
                                         cart_id=update.effective_user.id,
                                         product_id=context.user_data['product_id'],
                                         qty=user_query['data'])
@@ -159,10 +154,10 @@ def handle_cart(update: Update, context: CallbackContext):
                                  text='Пришлите, пожалуйста, ваш email')
         return State.WAITING_EMAIL
 
-    delete_product_from_cart(headers=context.user_data['moltin_headers'],
+    delete_product_from_cart(token=context.user_data['moltin_token'],
                              cart_id=update.effective_user.id,
                              product_id=user_query['data'])
-    show_cart(update, context, context.user_data['moltin_headers'])
+    show_cart(update, context, context.user_data['moltin_token'])
     return State.HANDLE_CART
 
 
@@ -171,7 +166,7 @@ def handle_user_details(update: Update, context: CallbackContext):
     update.message.reply_text(
         f'Благодарим за заказ! Мы свяжемся с вами по email {users_email}'
     )
-    create_customer(headers=context.user_data['moltin_headers'],
+    create_customer(token=context.user_data['moltin_token'],
                     customer_id=update.effective_user.id,
                     name=update.effective_user.first_name,
                     email=users_email)

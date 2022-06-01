@@ -25,15 +25,20 @@ def get_products_in_catalog(token):
     return response.json()['data']
 
 
-def get_product_data(headers, user_query):
+def get_product_data(token, user_query):
     endpoint = 'https://api.moltin.com/catalog/products/{}'
+    headers = {
+        'Authorization': f'Bearer {token}',
+        'Content-Type': 'application/json',
+    }
     response = requests.get(endpoint.format(user_query.data), headers=headers)
     response.raise_for_status()
     return response.json()['data']
 
 
-def add_product_to_cart(headers, cart_id, product_id, qty):
+def add_product_to_cart(token, cart_id, product_id, qty):
     endpoint = f'https://api.moltin.com/v2/carts/{cart_id}/items'
+    headers = {'Authorization': f'Bearer {token}'}
     data = {
       'data': {
           'id': product_id,
@@ -49,21 +54,27 @@ def add_product_to_cart(headers, cart_id, product_id, qty):
     return response.json()
 
 
-def delete_product_from_cart(headers, cart_id, product_id):
+def delete_product_from_cart(token, cart_id, product_id):
     endpoint = f'https://api.moltin.com/v2/carts/{cart_id}/items/{product_id}'
+    headers = {'Authorization': f'Bearer {token}'}
     response = requests.delete(endpoint, headers=headers)
     response.raise_for_status()
 
 
-def get_cart_items(headers, cart_id):
+def get_cart_items(token, cart_id):
     endpoint = f'https://api.moltin.com/v2/carts/{cart_id}/items'
+    headers = {
+        'Authorization': f'Bearer {token}',
+        'Content-Type': 'application/json',
+    }
     response = requests.get(endpoint, headers=headers)
     response.raise_for_status()
     return response.json()
 
 
-def create_customer(headers, customer_id, name, email):
+def create_customer(token, customer_id, name, email):
     endpoint = 'https://api.moltin.com/v2/customers'
+    headers = {'Authorization': f'Bearer {token}'}
     data = {
         'data': {
             'type': 'customer',

@@ -46,16 +46,10 @@ class State(Enum):
 
 
 def start(update: Update, context: CallbackContext):
-    moltin_token = generate_moltin_token(
-        context.bot_data['moltin_client_id'],
-        context.bot_data['moltin_secret_key'])
-
-    context.user_data['moltin_token'] = moltin_token
-
     user = update.effective_user
     update.message.reply_markdown_v2(
         text=f'Привет, {user.mention_markdown_v2()}\! Хотите заказать рыбки?',
-        reply_markup=get_main_menu_markup(moltin_token)
+        reply_markup=get_main_menu_markup(context.bot_data['moltin_token'])
     )
     return State.HANDLE_MENU
 
@@ -67,14 +61,14 @@ def show_menu(update: Update, context: CallbackContext):
     context.bot.send_message(
         chat_id=user_query.message.chat_id,
         text='Пожалуйста, выберите товар:',
-        reply_markup=get_main_menu_markup(context.user_data['moltin_token'])
+        reply_markup=get_main_menu_markup(context.bot_data['moltin_token'])
     )
     return State.HANDLE_MENU
 
 
 def handle_menu(update: Update, context: CallbackContext):
     user_query = update.callback_query
-    moltin_token = context.user_data['moltin_token']
+    moltin_token = context.bot_data['moltin_token']
 
     if user_query['data'] == 'cart':
         show_cart(update, context, moltin_token)
@@ -119,7 +113,7 @@ def handle_menu(update: Update, context: CallbackContext):
 
 def handle_description(update: Update, context: CallbackContext):
     user_query = update.callback_query
-    moltin_token = context.user_data['moltin_token']
+    moltin_token = context.bot_data['moltin_token']
 
     if user_query['data'] == 'back':
         return State.SHOW_MENU
@@ -145,6 +139,7 @@ def handle_description(update: Update, context: CallbackContext):
 
 def handle_cart(update: Update, context: CallbackContext):
     user_query = update.callback_query
+    moltin_token = context.bot_data['moltin_token']
 
     if user_query['data'] == 'get_menu':
         return State.SHOW_MENU
@@ -154,10 +149,10 @@ def handle_cart(update: Update, context: CallbackContext):
                                  text='Пришлите, пожалуйста, ваш email')
         return State.WAITING_EMAIL
 
-    delete_product_from_cart(token=context.user_data['moltin_token'],
+    delete_product_from_cart(token=moltin_token,
                              cart_id=update.effective_user.id,
                              product_id=user_query['data'])
-    show_cart(update, context, context.user_data['moltin_token'])
+    show_cart(update, context, moltin_token)
     return State.HANDLE_CART
 
 
@@ -166,7 +161,7 @@ def handle_user_details(update: Update, context: CallbackContext):
     update.message.reply_text(
         f'Благодарим за заказ! Мы свяжемся с вами по email {users_email}'
     )
-    create_customer(token=context.user_data['moltin_token'],
+    create_customer(token=context.bot_data['moltin_token'],
                     customer_id=update.effective_user.id,
                     name=update.effective_user.first_name,
                     email=users_email)
@@ -175,6 +170,14 @@ def handle_user_details(update: Update, context: CallbackContext):
 def finish(update: Update, context: CallbackContext):
     update.message.reply_text('Будем рады видеть вас снова 😊')
     return ConversationHandler.END
+
+
+def regenerate_token(context: CallbackContext):
+    moltin_token, _ = generate_moltin_token(
+        context.bot_data['moltin_client_id'],
+        context.bot_data['moltin_secret_key']
+    )
+    context.bot_data['moltin_token'] = moltin_token
 
 
 def main():
@@ -227,6 +230,11 @@ def main():
     )
     dispatcher.bot_data['moltin_client_id'] = moltin_client_id
     dispatcher.bot_data['moltin_secret_key'] = moltin_secret_key
+
+    moltin_token, exp_period = generate_moltin_token(moltin_client_id, moltin_secret_key)
+    dispatcher.bot_data['moltin_token'] = moltin_token
+    updater.job_queue.run_repeating(regenerate_token, interval=exp_period)
+
     dispatcher.add_handler(conv_handler)
 
     while True:

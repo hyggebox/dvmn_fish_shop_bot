@@ -10,7 +10,7 @@ def generate_moltin_token(client_id, secret_key):
     }
     response = requests.post(endpoint, data=data)
     response.raise_for_status()
-    return response.json()['access_token']
+    return response.json()['access_token'], response.json()['expires_in']
 
 
 def get_products_in_catalog(token):

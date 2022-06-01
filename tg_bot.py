@@ -4,7 +4,6 @@ import pathlib
 from enum import Enum, auto
 from time import sleep
 
-import requests
 from environs import Env
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, Bot
 from telegram.ext import (CallbackContext,
@@ -15,11 +14,9 @@ from telegram.ext import (CallbackContext,
                           MessageHandler,
                           Updater)
 
-from helpers import download_photo
+from helpers import download_photo, get_main_menu_markup, show_cart
 from moltin_handlers import (generate_moltin_token,
-                             get_products_in_catalog,
                              get_product_data,
-                             get_cart_items,
                              add_product_to_cart,
                              delete_product_from_cart,
                              create_customer)
@@ -46,41 +43,6 @@ class State(Enum):
     HANDLE_DESCRIPTION = auto()
     HANDLE_CART = auto()
     WAITING_EMAIL = auto()
-
-
-def get_main_menu_markup(token):
-    products_in_catalog = get_products_in_catalog(token)
-
-    buttons = [[InlineKeyboardButton(product['attributes']['name'],
-                                     callback_data=product['id'])]
-               for product in products_in_catalog]
-    buttons.append([InlineKeyboardButton('🛒 КОРЗИНА', callback_data='cart')])
-    return InlineKeyboardMarkup(buttons)
-
-
-def show_cart(update, context, headers):
-    user_query = update.callback_query
-    context.bot.delete_message(chat_id=user_query.message.chat_id,
-                               message_id=user_query.message.message_id)
-    cart_items = get_cart_items(headers, update.effective_user.id)
-    text = ''
-    buttons = []
-    for item in cart_items['data']:
-        text += (f'✔ {item["name"]}\n'
-                 f'{item["meta"]["display_price"]["with_tax"]["unit"]["formatted"]}/кг\n'
-                 f'{item["quantity"]} кг на '
-                 f'{item["meta"]["display_price"]["with_tax"]["value"]["formatted"]}\n\n')
-        buttons.append(
-            [InlineKeyboardButton(f'{item["name"]} ✖️',
-                                  callback_data=item['id'])]
-        )
-
-    text += f'ИТОГО: {cart_items["meta"]["display_price"]["with_tax"]["formatted"]}'
-    buttons.append([InlineKeyboardButton('📄 В МЕНЮ', callback_data='get_menu')])
-    buttons.append([InlineKeyboardButton('💳 ОПЛАТА', callback_data='check_out')])
-    context.bot.send_message(chat_id=update.effective_user.id,
-                             text=text,
-                             reply_markup=InlineKeyboardMarkup(buttons))
 
 
 def start(update: Update, context: CallbackContext):

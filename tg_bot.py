@@ -127,14 +127,19 @@ def handle_description(update: Update, context: CallbackContext):
                                         qty=user_query['data'])
     if 'errors' in cart_response:
         if cart_response['errors'][0]['title'] == 'Insufficient stock':
-            context.bot.send_message(chat_id=user_query.message.chat_id,
-                                     text='Недостаточно товара в наличии')
+            update.callback_query.answer(
+                text='Недостаточно товара в наличии',
+                show_alert=True
+            )
         else:
-            context.bot.send_message(chat_id=user_query.message.chat_id,
-                                     text='Произошла ошибка. Попробуйте снова')
+            update.callback_query.answer(
+                text='Произошла ошибка. Попробуйте снова'
+            )
         return State.HANDLE_DESCRIPTION
-    context.bot.send_message(chat_id=user_query.message.chat_id,
-                             text=f'Добавили в корзину {user_query["data"]} кг')
+    update.callback_query.answer(
+        text=f'Добавили в корзину {user_query["data"]} кг',
+        show_alert=True
+    )
 
 
 def handle_cart(update: Update, context: CallbackContext):

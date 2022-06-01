@@ -14,9 +14,13 @@ def get_extension(url):
     return file_extension
 
 
-def download_photo(headers, img_id):
-    response = requests.get(f'https://api.moltin.com/v2/files/{img_id}',
-                            headers=headers)
+def download_photo(token, img_id):
+    endpoint = f'https://api.moltin.com/v2/files/{img_id}'
+    headers = {
+        'Authorization': f'Bearer {token}',
+        'Content-Type': 'application/json',
+    }
+    response = requests.get(endpoint, headers=headers)
     response.raise_for_status()
 
     img_url = response.json()['data']['link']['href']

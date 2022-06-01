@@ -14,7 +14,7 @@ from telegram.ext import (CallbackContext,
                           MessageHandler,
                           Updater)
 
-from helpers import download_photo, get_main_menu_markup, show_cart
+from bot_helpers import download_photo, get_main_menu_markup, show_cart
 from moltin_handlers import (generate_moltin_token,
                              get_product_data,
                              add_product_to_cart,

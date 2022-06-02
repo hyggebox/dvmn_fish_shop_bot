@@ -83,7 +83,7 @@ def handle_menu(update: Update, context: CallbackContext):
     download_photo(moltin_token, product_img_id)
 
     for filename in os.listdir('images'):
-        if not product_img_id == os.path.splitext(filename)[0]:
+        if product_img_id != os.path.splitext(filename)[0]:
             continue
         with open(f'images/{filename}', 'rb') as image:
             reply_markup = InlineKeyboardMarkup(
